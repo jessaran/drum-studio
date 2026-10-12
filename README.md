@@ -48,7 +48,7 @@ backend/.venv/bin/pip install -r backend/requirements-separation.txt   # opciona
 ### Pruebas
 
 ```bash
-cd web && npm test              # 21 pruebas: reloj, scheduler, jitter, cuantización, partitura, MIDI, MusicXML, time-stretch
+cd web && npm test              # 23 pruebas (incluida la alineación automática): reloj, scheduler, jitter, cuantización, partitura, MIDI, MusicXML, time-stretch
 cd web && npm run typecheck
 cd backend && .venv/bin/python -m pytest -q   # 4 pruebas: pipeline y API
 cd backend && .venv/bin/python evaluate.py ../web/public/samples/primer-groove-mix.wav ../web/public/samples/primer-groove-reference.json [--separate]
@@ -79,7 +79,7 @@ Una app nativa (Swift + AVAudioEngine) ganaría en latencia de **entrada** (p. e
 | CoderLine/alphaTab | MPL-2.0 | Activo (1.8.4) | **Usada** para dibujar la partitura. Soporta percusión (articulaciones GP7), MusicXML, Guitar Pro 3–7 y alphaTex. **No importa MIDI**: el MIDI se cuantiza aquí y se convierte a alphaTex. Su reproductor está desactivado: el cursor lo mueve el reloj de la app. MPL es copyleft por archivo: se usa como dependencia sin modificar, compatible. |
 | opensheetmusicdisplay | BSD-3 | Activo | Descartada: solo MusicXML, su percusión es más limitada y no lee Guitar Pro. |
 | Tonejs/Midi | MIT | Sin cambios desde 2023, estable | **Usada** para leer y escribir MIDI. |
-| wavesurfer.js | BSD-3 | Activo (8.0) | **Usada** solo para mostrar la forma de onda en el ajuste de sincronía; el audio lo reproduce el motor propio. |
+| wavesurfer.js | BSD-3 | Activo (8.0) | Usada al principio para la forma de onda; **sustituida** por un alineador propio en canvas, porque WaveSurfer no permite arrastrar una pista respecto a otra con precisión de milisegundos. |
 | adefossez/demucs | MIT | Fork mantenido (el original de Meta está archivado) | **Usada** (opcional) vía PyPI `demucs` 4.0.1 + PyTorch 2.8 (MPS en Apple Silicon). |
 | gaston-michel/transcribir-bateria | **Sin licencia** | 4★ | Solo leída como referencia; no se copia código (sin licencia = todos los derechos reservados). |
 | Teraldan/drums-audio-to-midi | **Sin licencia** | 0★ | Ídem. |
@@ -99,10 +99,10 @@ web/src
     types.ts, instruments.ts, timeline.ts (mapa de tempo y compases)
     quantize.ts (rejilla por pulso), scoreModel.ts (2 voces, figuras, tresillos)
     alphaTex.ts, musicXml.ts, midiIO.ts, midiMapping.ts, scoreImport.ts
-    difficulty.ts, demoSong.ts
+    difficulty.ts, demoSong.ts, alignment.ts (picos y auto-alineación)
   engine/      clock.ts (reloj único), scheduler.ts (lookahead), engine.ts (Web Audio), visualLoop.ts (rAF único)
   audio/       drumSynth.ts, renderDemo.ts, timeStretch.ts (+worker), wav.ts
-  components/  drumkit/ (InteractiveDrumKit.tsx, kitAnimator.ts, geometry.ts, drumkit.css, demoSequence.ts)
+  components/  sync/AudioAligner.tsx (alineador arrastrable), drumkit/ (InteractiveDrumKit.tsx, kitAnimator.ts, geometry.ts, drumkit.css, demoSequence.ts)
                ScoreView.tsx (alphaTab), Highway.tsx, editor/, panels/
   state/       store.ts (Zustand), persistence.ts (IndexedDB)
 backend/app    main.py (FastAPI), pipeline.py (Demucs + librosa + clasificador)
@@ -126,6 +126,7 @@ Mediciones en el navegador (Chromium, Mac, 60 Hz): 43/43 golpes al 100 % y 61/61
 
 - Batería SVG reconstruida (8 piezas independientes, colores y distribución de la referencia). El bombo se representa solo con el pedal central; los golpes del pie izquierdo (pedal de hi-hat) se muestran en el hi-hat. Golpe: brillo instantáneo, agrandamiento del 12 % sobre su centro, pulso; duración configurable (150 ms por defecto); golpes simultáneos; `triggerDrum(instrument, velocity)`; clic o toque con sonido; secuencia demo de 8 tiempos.
 - Canción demo original (16 compases, 100 BPM, ghost notes, tresillos, secciones, variante de principiante escrita a mano), con audio sintetizado y alineado exactamente.
+- **Alineador audio ↔ MIDI**: la forma de onda bajo los golpes del MIDI, en el mismo eje. Se arrastra con el dedo, con pellizco para el zoom (hasta ~0,5 ms por píxel), guías de bombo y caja, ajuste de ±1/10/100 ms, «Auto-alinear» (correlación de ataques; ±5 ms en las pruebas) y escucha del MIDI encima del MP3.
 - Modo A: importación de MIDI (selección de pistas, mapeo GM/Roland editable, notas sin asignar visibles), MusicXML y Guitar Pro (vía alphaTab, incluidas secciones). Asociación de audio (MP3/WAV/FLAC/M4A) a una partitura, con offset y escala de tempo.
 - Partitura alphaTab horizontal: sigue la música, resalta el golpe actual, cabezas en el color de cada pieza, fantasmas y acentos, zoom, toque en un compás para saltar a él, bucle visible.
 - Vista simplificada (carriles de colores), alternable con la partitura o ambas a la vez.

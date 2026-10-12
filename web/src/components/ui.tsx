@@ -66,7 +66,7 @@ export function Sheet({ title, isOpen, onClose, children, wide }: { title: strin
   return (
     <Modal.Backdrop isOpen={isOpen} onOpenChange={(o) => !o && onClose()}>
         <Modal.Container>
-          <Modal.Dialog className={wide ? 'sm:max-w-[920px] w-[96vw]' : 'sm:max-w-[560px] w-[94vw]'}>
+          <Modal.Dialog className={wide ? 'sm:max-w-[1180px] w-[97vw]' : 'sm:max-w-[560px] w-[94vw]'}>
             <Modal.CloseTrigger />
             <Modal.Header>
               <Modal.Heading>{title}</Modal.Heading>
