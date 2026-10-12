@@ -30,6 +30,21 @@ backend/.venv/bin/pip install -r backend/requirements-separation.txt   # opciona
 3. Para la transcripción, en la app: Ajustes → Transcripción automática → servicio `http://<IP-del-Mac>:8000`.
 4. El primer toque en Play activa el audio (requisito de iOS). La app pide a Safari que suene aunque el interruptor de silencio esté activado (`navigator.audioSession`).
 
+### Online
+
+- **App web**: https://jessaran.github.io/drum-studio/ (GitHub Pages). Cada `git push` a `main` ejecuta las pruebas, compila y publica (`.github/workflows/deploy.yml`).
+- **Transcripción**: Hugging Face Space (Docker, CPU gratuita) construido desde `backend/` con el mismo workflow. Configuración única:
+  1. En huggingface.co: crea un Space nuevo, SDK **Docker**, plantilla en blanco (p. ej. `drumstudio-transcripcion`), y un token de acceso con permiso **Write**.
+  2. En este repositorio:
+     ```bash
+     gh secret set HF_TOKEN                                   # pega el token cuando lo pida
+     gh variable set HF_SPACE --body "<usuario-hf>/drumstudio-transcripcion"
+     gh variable set BACKEND_URL --body "https://<usuario-hf>-drumstudio-transcripcion.hf.space"
+     gh workflow run Publicar
+     ```
+  3. La primera construcción del Space tarda ~10 min (instala PyTorch y descarga el modelo). En CPU, una canción de 4 min tarda unos 2–5 min. El Space se duerme tras 48 h sin uso y se despierta con la primera petición.
+- Los MP3 que cargas se guardan solo en el dispositivo (IndexedDB). Solo se envían al Space si pides una transcripción, y allí se borran a las 2 h.
+
 ### Pruebas
 
 ```bash
