@@ -1,5 +1,5 @@
 import { computeBars, createTimeline, secondsToTick, tickToSeconds } from './timeline'
-import type { DrumEvent, Section, Song, SongOrigin, StemRef, Timeline } from './types'
+import type { DrumEvent, IgnoredHit, Section, Song, SongOrigin, StemRef, Timeline } from './types'
 import { uid } from './uid'
 
 export function buildSong(p: {
@@ -8,6 +8,7 @@ export function buildSong(p: {
   origin: SongOrigin
   timeline?: Timeline
   events?: DrumEvent[]
+  ignoredHits?: IgnoredHit[]
   sections?: Section[]
   durationTicks?: number
   audio?: { stems: StemRef[]; offset: number; duration: number }
@@ -31,6 +32,7 @@ export function buildSong(p: {
     origin: p.origin,
     timeline,
     events,
+    ignoredHits: p.ignoredHits?.length ? p.ignoredHits : undefined,
     duration,
     sections: p.sections ?? [],
     pedalRole: 'hiHatPedal',

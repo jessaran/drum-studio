@@ -300,6 +300,9 @@ export function DrumEditor() {
         <Button size="sm" variant={multi ? 'primary' : 'tertiary'} onPress={() => setMulti(!multi)}>
           Selección múltiple
         </Button>
+        <Button size="sm" variant="tertiary" onPress={() => useApp.getState().setPanel('mapping')}>
+          Notas MIDI → piezas
+        </Button>
         <span className="muted">Toca vacío = añadir · toca golpe = seleccionar · arrastra = mover/cambiar pieza</span>
         <div className="ml-auto flex items-center gap-2">
           <label className="flex items-center gap-1">

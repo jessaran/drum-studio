@@ -30,6 +30,19 @@ export interface DrumEvent {
   midiNote?: number
 }
 
+/**
+ * Golpe del archivo original cuya nota no tenía pieza asignada al importar.
+ * Se guarda para poder asignarlo más tarde sin volver a importar.
+ */
+export interface IgnoredHit {
+  id: string
+  midiNote: number
+  time: number
+  tick: number
+  rawTick?: number
+  velocity: number
+}
+
 export interface TempoPoint {
   tick: number
   bpm: number
@@ -85,6 +98,8 @@ export interface Song {
   duration: number
   sections: Section[]
   pedalRole: PedalRole
+  /** Golpes de notas sin asignar (MIDI/partitura), recuperables desde «Notas MIDI». */
+  ignoredHits?: IgnoredHit[]
   /** Variantes simplificadas de autor (si existen). Nunca se generan inventando golpes. */
   levels?: Partial<Record<'beginner' | 'intermediate', DrumEvent[]>>
   createdAt: number

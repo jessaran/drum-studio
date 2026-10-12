@@ -8,6 +8,7 @@ import { Highway } from './components/Highway'
 import { DiagnosticsPanel } from './components/panels/DiagnosticsPanel'
 import { ImportPanel } from './components/panels/ImportPanel'
 import { LibraryPanel } from './components/panels/LibraryPanel'
+import { MappingPanel } from './components/panels/MappingPanel'
 import { SettingsPanel } from './components/panels/SettingsPanel'
 import { SyncPanel } from './components/panels/SyncPanel'
 import { TranscribePanel } from './components/panels/TranscribePanel'
@@ -121,6 +122,11 @@ export default function App() {
         <div className="stage-info">
           {sourceSummary && <span className="chip">Golpes: {sourceSummary}</span>}
           {!engine.hasAudio && song && <span className="chip">Sin audio · sonidos guía</span>}
+          {song?.ignoredHits && song.ignoredHits.length > 0 && (
+            <button type="button" className="chip cursor-pointer" style={{ color: '#ff8a1f', borderColor: '#ff8a1f' }} onClick={() => setPanel('mapping')}>
+              {song.ignoredHits.length} golpes sin pieza · Asignar
+            </button>
+          )}
           {st.loop && <span className="chip" style={{ color: '#4fbdfa' }}>Bucle activo</span>}
           {st.stretching && <span className="chip">Ajustando tempo sin cambiar tono…</span>}
           {loading && <span className="chip">{loading}</span>}
@@ -172,6 +178,7 @@ export default function App() {
       <SettingsPanel isOpen={panel === 'settings'} onClose={() => setPanel('none')} />
       <DiagnosticsPanel isOpen={panel === 'diagnostics'} onClose={() => setPanel('none')} kitRef={kitRef} />
       <SyncPanel isOpen={panel === 'sync'} onClose={() => setPanel('none')} />
+      <MappingPanel isOpen={panel === 'mapping'} onClose={() => setPanel('none')} />
       <TranscribePanel isOpen={panel === 'transcribe'} onClose={() => setPanel('none')} />
     </div>
   )

@@ -4,13 +4,13 @@ import { eventsForLevel, type Level, type LevelResult } from '../core/difficulty
 import { BUILTIN_MAPPINGS, GM_MAPPING, type DrumMapping } from '../core/midiMapping'
 import { assignRawTicks, quantizeEvents } from '../core/quantize'
 import { annotateEvents, tickToSeconds } from '../core/timeline'
-import type { DrumEvent, Song } from '../core/types'
+import type { DrumEvent, IgnoredHit, Song } from '../core/types'
 import { engine } from '../engine/engine'
 import { listSongs, loadSettings, saveSettings, saveSong, type SongMeta } from './persistence'
 
 export type Theme = 'light' | 'dark' | 'system'
 export type ViewMode = 'score' | 'timeline' | 'both'
-export type Panel = 'none' | 'import' | 'editor' | 'settings' | 'diagnostics' | 'transcribe' | 'sync' | 'library'
+export type Panel = 'none' | 'import' | 'editor' | 'settings' | 'diagnostics' | 'transcribe' | 'sync' | 'library' | 'mapping'
 
 export interface Settings {
   theme: Theme
@@ -48,10 +48,18 @@ const DEFAULT_SETTINGS: Settings = {
   volumes: { ...engine.volumes },
 }
 
-interface History {
-  past: DrumEvent[][]
-  future: DrumEvent[][]
+/** Estado editable que se guarda en el historial de deshacer. */
+interface Snapshot {
+  events: DrumEvent[]
+  ignoredHits?: IgnoredHit[]
 }
+
+interface History {
+  past: Snapshot[]
+  future: Snapshot[]
+}
+
+const snap = (s: Song): Snapshot => ({ events: s.events, ignoredHits: s.ignoredHits })
 
 interface AppState {
   song: Song | null
@@ -74,8 +82,8 @@ interface AppState {
   openSong: (song: Song) => Promise<void>
   /** Sustituye la canción en memoria (p. ej. tras cambiar offset o metadatos). */
   patchSong: (p: Partial<Song>) => void
-  /** Cambia los eventos registrando deshacer. */
-  editEvents: (next: DrumEvent[]) => void
+  /** Cambia los eventos (y opcionalmente los golpes ignorados) registrando deshacer. */
+  editEvents: (next: DrumEvent[], ignoredHits?: IgnoredHit[]) => void
   undo: () => void
   redo: () => void
   save: () => Promise<void>
@@ -161,32 +169,32 @@ export const useApp = create<AppState>((set, get) => ({
     } else set({ song: next, dirty: true })
   },
 
-  editEvents: (nextEvents) => {
+  editEvents: (nextEvents, ignoredHits) => {
     const song = get().song
     if (!song) return
     const { past } = get().history
     const events = annotateEvents(song.timeline, [...nextEvents].sort((a, b) => a.tick - b.tick || a.time - b.time))
-    const next = { ...song, events, updatedAt: Date.now() }
+    const next = { ...song, events, ignoredHits: ignoredHits ?? song.ignoredHits, updatedAt: Date.now() }
     const info = applyLevel(next, get().settings.level)
-    set({ song: next, playEvents: info.events, levelInfo: info, history: { past: [...past.slice(-99), song.events], future: [] }, dirty: true })
+    set({ song: next, playEvents: info.events, levelInfo: info, history: { past: [...past.slice(-99), snap(song)], future: [] }, dirty: true })
   },
 
   undo: () => {
     const { song, history } = get()
     if (!song || history.past.length === 0) return
     const prev = history.past[history.past.length - 1]
-    const next = { ...song, events: prev }
+    const next = { ...song, ...prev }
     const info = applyLevel(next, get().settings.level)
-    set({ song: next, playEvents: info.events, levelInfo: info, history: { past: history.past.slice(0, -1), future: [song.events, ...history.future] }, dirty: true })
+    set({ song: next, playEvents: info.events, levelInfo: info, history: { past: history.past.slice(0, -1), future: [snap(song), ...history.future] }, dirty: true })
   },
 
   redo: () => {
     const { song, history } = get()
     if (!song || history.future.length === 0) return
     const [first, ...rest] = history.future
-    const next = { ...song, events: first }
+    const next = { ...song, ...first }
     const info = applyLevel(next, get().settings.level)
-    set({ song: next, playEvents: info.events, levelInfo: info, history: { past: [...history.past, song.events], future: rest }, dirty: true })
+    set({ song: next, playEvents: info.events, levelInfo: info, history: { past: [...history.past, snap(song)], future: rest }, dirty: true })
   },
 
   save: async () => {

@@ -62,6 +62,20 @@ export const ROLAND_MAPPING: DrumMapping = {
   },
 }
 
+/** Opciones de pieza (con variantes) para los selectores de mapeo. */
+export const MAP_OPTIONS: { key: string; label: string; value: MappedNote | null }[] = [
+  { key: '', label: 'Ignorar', value: null },
+  ...(Object.keys(INSTRUMENTS) as InstrumentId[]).map((id) => ({ key: id, label: INSTRUMENTS[id].label, value: { instrument: id } as MappedNote })),
+  { key: 'hiHat:open', label: 'Hi-hat (abierto)', value: { instrument: 'hiHat', articulation: 'open' } },
+  { key: 'ride:bell', label: 'Ride (campana)', value: { instrument: 'ride', articulation: 'bell' } },
+  { key: 'snare:sidestick', label: 'Caja (aro/cross-stick)', value: { instrument: 'snare', articulation: 'sidestick' } },
+  { key: 'crash:china', label: 'Crash (china)', value: { instrument: 'crash', articulation: 'china' } },
+  { key: 'crash:splash', label: 'Crash (splash)', value: { instrument: 'crash', articulation: 'splash' } },
+]
+
+export const mappingKey = (m: MappedNote | null | undefined) =>
+  m ? (m.articulation && m.articulation !== 'closed' ? `${m.instrument}:${m.articulation}` : m.instrument) : ''
+
 export const BUILTIN_MAPPINGS: DrumMapping[] = [GM_MAPPING, ROLAND_MAPPING]
 
 export function mapNote(mapping: DrumMapping, note: number): MappedNote | null {

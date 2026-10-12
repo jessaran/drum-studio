@@ -48,7 +48,7 @@ backend/.venv/bin/pip install -r backend/requirements-separation.txt   # opciona
 ### Pruebas
 
 ```bash
-cd web && npm test              # 23 pruebas (incluida la alineación automática): reloj, scheduler, jitter, cuantización, partitura, MIDI, MusicXML, time-stretch
+cd web && npm test              # 26 pruebas (incluidas la alineación automática y la reasignación de notas): reloj, scheduler, jitter, cuantización, partitura, MIDI, MusicXML, time-stretch
 cd web && npm run typecheck
 cd backend && .venv/bin/python -m pytest -q   # 4 pruebas: pipeline y API
 cd backend && .venv/bin/python evaluate.py ../web/public/samples/primer-groove-mix.wav ../web/public/samples/primer-groove-reference.json [--separate]
@@ -127,6 +127,7 @@ Mediciones en el navegador (Chromium, Mac, 60 Hz): 43/43 golpes al 100 % y 61/61
 - Batería SVG reconstruida (8 piezas independientes, colores y distribución de la referencia). El bombo se representa solo con el pedal central; los golpes del pie izquierdo (pedal de hi-hat) se muestran en el hi-hat. Golpe: brillo instantáneo, agrandamiento del 12 % sobre su centro, pulso; duración configurable (150 ms por defecto); golpes simultáneos; `triggerDrum(instrument, velocity)`; clic o toque con sonido; secuencia demo de 8 tiempos.
 - Canción demo original (16 compases, 100 BPM, ghost notes, tresillos, secciones, variante de principiante escrita a mano), con audio sintetizado y alineado exactamente.
 - **Alineador audio ↔ MIDI**: la forma de onda bajo los golpes del MIDI, en el mismo eje. Se arrastra con el dedo, con pellizco para el zoom (hasta ~0,5 ms por píxel), guías de bombo y caja, ajuste de ±1/10/100 ms, «Auto-alinear» (correlación de ataques; ±5 ms en las pruebas) y escucha del MIDI encima del MP3.
+- **Notas MIDI → piezas después de importar** (Editor, Ajustes o el aviso «golpes sin pieza»): cada nota del archivo se puede reasignar a otra pieza o ignorarse, en todos sus golpes a la vez. Los golpes de notas ignoradas se guardan y se pueden recuperar. Se puede deshacer y guardar como mapeo para las próximas importaciones.
 - Modo A: importación de MIDI (selección de pistas, mapeo GM/Roland editable, notas sin asignar visibles), MusicXML y Guitar Pro (vía alphaTab, incluidas secciones). Asociación de audio (MP3/WAV/FLAC/M4A) a una partitura, con offset y escala de tempo.
 - Partitura alphaTab horizontal: sigue la música, resalta el golpe actual, cabezas en el color de cada pieza, fantasmas y acentos, zoom, toque en un compás para saltar a él, bucle visible.
 - Vista simplificada (carriles de colores), alternable con la partitura o ambas a la vez.

@@ -94,6 +94,9 @@ export function SettingsPanel({ isOpen, onClose }: { isOpen: boolean; onClose: (
           <Button size="sm" variant="secondary" onPress={() => setPanel('sync')} isDisabled={!song?.audio}>
             Sincronía audio ↔ partitura
           </Button>
+          <Button size="sm" variant="secondary" onPress={() => setPanel('mapping')} isDisabled={!song}>
+            Notas MIDI → piezas
+          </Button>
           <Button size="sm" variant="secondary" onPress={() => setPanel('diagnostics')}>
             Diagnóstico de sincronía
           </Button>

@@ -1,7 +1,7 @@
 import * as alphaTab from '@coderline/alphatab'
 import { GM_MAPPING, mapNote, type DrumMapping } from './midiMapping'
 import { annotateEvents, tickToSeconds } from './timeline'
-import type { DrumEvent, Section, Timeline } from './types'
+import type { DrumEvent, IgnoredHit, Section, Timeline } from './types'
 import { uid } from './uid'
 
 /**
@@ -19,6 +19,8 @@ export interface ImportedScore {
   artist: string
   timeline: Timeline
   events: DrumEvent[]
+  /** Golpes de notas sin pieza asignada (se pueden asignar después). */
+  ignored: IgnoredHit[]
   sections: Section[]
   durationTicks: number
   trackNames: string[]
@@ -70,6 +72,7 @@ export function extractFromScore(score: alphaTab.model.Score, fileName: string, 
   const timeline: Timeline = { ppq, tempos: dedupe(tempos), timeSigs }
   const events: DrumEvent[] = []
   const unknown = new Set<number>()
+  const ignored: IgnoredHit[] = []
   const staff = track.staves[0]
   for (const bar of staff.bars) {
     for (const voice of bar.voices) {
@@ -86,13 +89,14 @@ export function extractFromScore(score: alphaTab.model.Score, fileName: string, 
             midiNote = note.realValue
           }
           const mapped = mapNote(mapping, midiNote)
-          if (!mapped) {
-            unknown.add(midiNote)
-            continue
-          }
           let velocity = DYN_TO_VELOCITY[note.dynamics] ?? 90
           if (note.isGhost) velocity = Math.min(velocity, 40)
           if (note.accentuated !== alphaTab.model.AccentuationType.None) velocity = Math.max(velocity, 118)
+          if (!mapped) {
+            unknown.add(midiNote)
+            ignored.push({ id: uid(), midiNote, time: tickToSeconds(timeline, tick), tick, velocity })
+            continue
+          }
           events.push({
             id: uid(),
             instrument: mapped.instrument,
@@ -110,7 +114,7 @@ export function extractFromScore(score: alphaTab.model.Score, fileName: string, 
       }
     }
   }
-  if (unknown.size) warnings.push(`Notas de percusión sin asignar (ignoradas): ${[...unknown].join(', ')}. Puedes asignarlas en el mapeo.`)
+  if (unknown.size) warnings.push(`Notas de percusión sin asignar (ignoradas): ${[...unknown].join(', ')}. Puedes asignarlas en «Notas MIDI».`)
   const last = score.masterBars[score.masterBars.length - 1]
   const durationTicks = last ? last.start + last.calculateDuration() : 0
   if (sections.length) sections[sections.length - 1].endBar = score.masterBars.length
@@ -119,6 +123,7 @@ export function extractFromScore(score: alphaTab.model.Score, fileName: string, 
     artist: score.artist || '',
     timeline,
     events: annotateEvents(timeline, events.sort((a, b) => a.tick - b.tick)),
+    ignored,
     sections,
     durationTicks,
     trackNames: score.tracks.map((t) => t.name),

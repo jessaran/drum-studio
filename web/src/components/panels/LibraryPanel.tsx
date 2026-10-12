@@ -42,11 +42,11 @@ export function LibraryPanel({ isOpen, onClose }: { isOpen: boolean; onClose: ()
       if (/\.mid$/.test(name)) {
         const parsed = parseMidi(bytes, name)
         const perc = parsed.tracks.filter((t) => t.isPercussion).map((t) => t.index)
-        const { events, unmapped } = midiToEvents(parsed, perc, useApp.getState().mapping())
-        song = buildSong({ title: parsed.name, origin: 'midi', timeline: parsed.timeline, events, audio, notes: unmapped.length ? `Notas MIDI ignoradas (sin asignar): ${unmapped.join(', ')}` : undefined })
+        const { events, unmapped, ignored } = midiToEvents(parsed, perc, useApp.getState().mapping())
+        song = buildSong({ title: parsed.name, origin: 'midi', timeline: parsed.timeline, events, ignoredHits: ignored, audio, notes: unmapped.length ? `Notas MIDI ignoradas (sin asignar): ${unmapped.join(', ')}` : undefined })
       } else {
         const imp = importScoreBytes(bytes, name, useApp.getState().mapping())
-        song = buildSong({ title: imp.title, artist: imp.artist, origin: 'musicxml', timeline: imp.timeline, events: imp.events, sections: imp.sections, durationTicks: imp.durationTicks, audio })
+        song = buildSong({ title: imp.title, artist: imp.artist, origin: 'musicxml', timeline: imp.timeline, events: imp.events, ignoredHits: imp.ignored, sections: imp.sections, durationTicks: imp.durationTicks, audio })
       }
       await openSong(song)
       await save()

@@ -3,7 +3,7 @@ import { INSTRUMENTS, PEDAL_ROLES, type PedalRole } from './instruments'
 import { mapNote, type DrumMapping } from './midiMapping'
 import { DEFAULT_QUANTIZE, quantizeEvents, type QuantizeOptions } from './quantize'
 import { annotateEvents, PPQ } from './timeline'
-import type { DrumEvent, Timeline } from './types'
+import type { DrumEvent, IgnoredHit, Timeline } from './types'
 import { uid } from './uid'
 
 export interface MidiTrackSummary {
@@ -74,18 +74,20 @@ export function midiToEvents(
   trackIdx: number[],
   mapping: DrumMapping,
   quantize: QuantizeOptions = DEFAULT_QUANTIZE,
-): { events: DrumEvent[]; unmapped: number[] } {
+): { events: DrumEvent[]; unmapped: number[]; ignored: IgnoredHit[] } {
   const scale = PPQ / parsed.midi.header.ppq
   const raw: DrumEvent[] = []
   const unmapped = new Set<number>()
+  const ignored: IgnoredHit[] = []
   for (const i of trackIdx) {
     for (const n of parsed.midi.tracks[i].notes) {
       const mapped = mapNote(mapping, n.midi)
+      const rawTick = n.ticks * scale
       if (!mapped) {
         unmapped.add(n.midi)
+        ignored.push({ id: uid(), midiNote: n.midi, time: n.time, tick: Math.round(rawTick), rawTick, velocity: Math.max(1, Math.min(127, Math.round(n.velocity * 127))) })
         continue
       }
-      const rawTick = n.ticks * scale
       raw.push({
         id: uid(),
         instrument: mapped.instrument,
@@ -103,7 +105,7 @@ export function midiToEvents(
     }
   }
   const { events } = quantizeEvents(parsed.timeline, raw, quantize)
-  return { events: annotateEvents(parsed.timeline, events), unmapped: [...unmapped].sort((a, b) => a - b) }
+  return { events: annotateEvents(parsed.timeline, events), unmapped: [...unmapped].sort((a, b) => a - b), ignored }
 }
 
 /** Exporta a MIDI tipo 1 en el canal 10 (índice 9), con el mapa de tempo y compases. */

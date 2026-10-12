@@ -122,11 +122,15 @@ export function quantizeEvents(
   return { events: dedupe(out), grids }
 }
 
-/** Tras cuantizar, dos golpes del mismo instrumento pueden caer en el mismo tick: se conserva el más fuerte. */
+/**
+ * Tras cuantizar, dos golpes del mismo instrumento y la misma nota de origen
+ * pueden caer en el mismo tick: se conserva el más fuerte. Golpes de notas MIDI
+ * distintas no se fusionan (así se pueden reasignar por separado después).
+ */
 function dedupe(events: DrumEvent[]): DrumEvent[] {
   const map = new Map<string, DrumEvent>()
   for (const e of events) {
-    const k = `${e.instrument}@${e.tick}`
+    const k = `${e.instrument}@${e.tick}@${e.midiNote ?? ''}`
     const prev = map.get(k)
     if (!prev || e.velocity > prev.velocity) map.set(k, e)
   }

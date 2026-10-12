@@ -1,9 +1,8 @@
 import { Button } from '@heroui/react'
 import { useMemo, useState } from 'react'
 import { decodeBlob, primeStem } from '../../audio/audioLoader'
-import { INSTRUMENT_IDS, INSTRUMENTS } from '../../core/instruments'
 import { collectNotes, midiToEvents, parseMidi, type ParsedMidi } from '../../core/midiIO'
-import { BUILTIN_MAPPINGS, noteLabel, type DrumMapping, type MappedNote } from '../../core/midiMapping'
+import { BUILTIN_MAPPINGS, MAP_OPTIONS, mappingKey, noteLabel, type DrumMapping } from '../../core/midiMapping'
 import { DEFAULT_QUANTIZE, type QuantizeOptions } from '../../core/quantize'
 import { importScoreBytes, type ImportedScore } from '../../core/scoreImport'
 import { buildSong } from '../../core/songFactory'
@@ -17,17 +16,7 @@ import { Sheet, Toggle } from '../ui'
 const SCORE_EXT = /\.(mid|midi|xml|musicxml|mxl|gp|gp3|gp4|gp5|gpx|gp7|alphatex|atex)$/i
 const AUDIO_EXT = /\.(mp3|wav|flac|m4a|aac|ogg|oga|aiff?)$/i
 
-/** Opciones del selector de mapeo: pieza o pieza+articulación. */
-const MAP_OPTIONS: { key: string; label: string; value: MappedNote | null }[] = [
-  { key: '', label: 'Ignorar', value: null },
-  ...INSTRUMENT_IDS.map((id) => ({ key: id, label: INSTRUMENTS[id].label, value: { instrument: id } as MappedNote })),
-  { key: 'hiHat:open', label: 'Hi-hat (abierto)', value: { instrument: 'hiHat', articulation: 'open' } },
-  { key: 'ride:bell', label: 'Ride (campana)', value: { instrument: 'ride', articulation: 'bell' } },
-  { key: 'snare:sidestick', label: 'Caja (aro/cross-stick)', value: { instrument: 'snare', articulation: 'sidestick' } },
-  { key: 'crash:china', label: 'Crash (china)', value: { instrument: 'crash', articulation: 'china' } },
-  { key: 'crash:splash', label: 'Crash (splash)', value: { instrument: 'crash', articulation: 'splash' } },
-]
-const keyOf = (m: MappedNote | null | undefined) => (m ? (m.articulation ? `${m.instrument}:${m.articulation}` : m.instrument) : '')
+const keyOf = mappingKey
 
 interface AudioPick {
   file: File
@@ -113,14 +102,15 @@ export function ImportPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () 
       if (mode === 'attach' && currentSong && audioPart) {
         song = { ...currentSong, id: uid('song'), audio: { stems: audioPart.stems, offset: 0 }, duration: Math.max(currentSong.duration, audioPart.duration), updatedAt: Date.now(), title: currentSong.title }
       } else if (midi) {
-        const { events, unmapped } = midiToEvents(midi, tracks, mapping, quant)
+        const { events, unmapped, ignored } = midiToEvents(midi, tracks, mapping, quant)
         song = buildSong({
           title: midi.name,
           origin: 'midi',
           timeline: midi.timeline,
           events,
+          ignoredHits: ignored,
           audio: audioPart,
-          notes: unmapped.length ? `Notas MIDI ignoradas (sin asignar): ${unmapped.join(', ')}` : undefined,
+          notes: unmapped.length ? `Notas MIDI sin asignar al importar: ${unmapped.join(', ')} (puedes asignarlas en «Notas MIDI»).` : undefined,
         })
       } else if (scoreImport) {
         song = buildSong({
@@ -129,6 +119,7 @@ export function ImportPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () 
           origin: /\.(gp\d?|gpx)$/i.test(scoreFile?.name ?? '') ? 'guitarpro' : 'musicxml',
           timeline: scoreImport.timeline,
           events: scoreImport.events,
+          ignoredHits: scoreImport.ignored,
           sections: scoreImport.sections,
           durationTicks: scoreImport.durationTicks,
           audio: audioPart,
