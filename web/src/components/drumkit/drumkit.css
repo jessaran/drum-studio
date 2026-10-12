@@ -1,0 +1,55 @@
+/* Estilos de la batería. Las animaciones se aplican por JS (transform/opacity). */
+
+.drumkit {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  --kit-outline: #1b1c1f;
+}
+
+.kit-piece {
+  cursor: pointer;
+}
+
+.kit-body,
+.kit-pulse,
+.kit-glow,
+.kit-approach {
+  transform-box: view-box;
+  will-change: transform, opacity;
+}
+
+.kit-flash {
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.kit-pulse,
+.kit-glow,
+.kit-approach {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.kit-label rect {
+  fill: var(--kit-label-bg, rgba(15, 17, 21, 0.78));
+}
+
+.kit-label text {
+  fill: #ffffff;
+  font: 700 22px/1 ui-sans-serif, system-ui, -apple-system, sans-serif;
+  letter-spacing: 0.04em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kit-pulse,
+  .kit-approach {
+    display: none;
+  }
+}

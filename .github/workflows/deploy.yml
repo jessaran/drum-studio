@@ -1,0 +1,72 @@
+name: Publicar
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: publicar
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Pruebas y compilación de la web
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npx tsc -b --noEmit
+      - run: npx vite build
+        env:
+          # GitHub Pages publica en https://<usuario>.github.io/<repositorio>/
+          VITE_BASE: /${{ github.event.repository.name }}/
+          # URL del Space de Hugging Face (variable del repositorio BACKEND_URL); vacía = http://localhost:8000
+          VITE_BACKEND_URL: ${{ vars.BACKEND_URL }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  pages:
+    name: Publicar en GitHub Pages
+    needs: web
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+  space:
+    name: Subir el backend a Hugging Face
+    # Solo si se ha configurado la variable HF_SPACE (usuario/nombre-del-space) y el secreto HF_TOKEN.
+    if: vars.HF_SPACE != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sincronizar backend/ con el Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ vars.HF_SPACE }}
+        run: |
+          git clone "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE}" space
+          rsync -a --delete --exclude .git --exclude .venv --exclude data --exclude __pycache__ --exclude .pytest_cache backend/ space/
+          cd space
+          git add -A
+          git -c user.name="github-actions" -c user.email="actions@users.noreply.github.com" commit -m "Despliegue ${GITHUB_SHA::7}" || { echo "Sin cambios"; exit 0; }
+          git push

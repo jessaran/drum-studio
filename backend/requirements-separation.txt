@@ -1,0 +1,3 @@
+# Opcional: separación de batería con Demucs (MIT). Descarga PyTorch (~1 GB con dependencias)
+# y, en el primer uso, el modelo htdemucs (~80 MB).
+demucs>=4.0.1

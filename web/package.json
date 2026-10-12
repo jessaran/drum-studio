@@ -1,0 +1,41 @@
+{
+  "name": "web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc -b --noEmit",
+    "gen:samples": "tsx scripts/generate-samples.ts"
+  },
+  "dependencies": {
+    "@coderline/alphatab": "^1.8.4",
+    "@heroui/react": "^3.2.6",
+    "@heroui/styles": "^3.2.6",
+    "@tonejs/midi": "^2.0.28",
+    "idb-keyval": "^6.3.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "wavesurfer.js": "^8.0.2",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@coderline/alphatab-vite": "^1.8.4",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "node-web-audio-api": "^2.2.0",
+    "oxlint": "^1.81.0",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.4"
+  }
+}

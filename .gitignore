@@ -1,0 +1,11 @@
+node_modules/
+dist/
+backend/.venv/
+backend/data/
+__pycache__/
+.DS_Store
+.pytest_cache/
+.claude/
+web/node_modules/
+web/public/font/
+web/public/soundfont/

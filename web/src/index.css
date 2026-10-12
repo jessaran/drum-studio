@@ -1,0 +1,347 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --app-bg: #f4f5f7;
+  --app-panel: #ffffff;
+  --app-panel-2: #f0f1f4;
+  --app-border: #e1e3e8;
+  --app-text: #17181b;
+  --app-muted: #6b7079;
+  --app-accent: #ff8a1f;
+  --kit-bg: radial-gradient(ellipse at 50% 40%, #ffffff 0%, #eef0f3 70%);
+  --score-bg: #ffffff;
+  color-scheme: light;
+}
+
+.dark {
+  --app-bg: #0f1115;
+  --app-panel: #171a20;
+  --app-panel-2: #1e222a;
+  --app-border: #2a2f39;
+  --app-text: #eceef2;
+  --app-muted: #9ba2ae;
+  --app-accent: #ff9a3c;
+  --kit-bg: radial-gradient(ellipse at 50% 40%, #1d2129 0%, #111318 70%);
+  --score-bg: #14171d;
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: var(--app-bg);
+  color: var(--app-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "SF Pro Text", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+body {
+  /* iPad: sin zoom por doble toque ni selección accidental al tocar la batería */
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ---------- Layout principal ---------- */
+.app {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  box-sizing: border-box;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--app-panel);
+  border-bottom: 1px solid var(--app-border);
+  flex-wrap: wrap;
+  min-height: 60px;
+}
+
+.stage {
+  position: relative;
+  background: var(--kit-bg);
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.stage .drumkit {
+  max-height: 100%;
+  max-width: min(100%, 1100px);
+  padding: 10px 0;
+  box-sizing: border-box;
+}
+
+.bottom {
+  min-width: 0;
+  background: var(--app-panel);
+  border-top: 1px solid var(--app-border);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.bottom.view-score {
+  height: clamp(250px, 38dvh, 360px);
+}
+.bottom.view-both {
+  height: clamp(320px, 50dvh, 480px);
+}
+.bottom.view-timeline {
+  height: clamp(200px, 30dvh, 300px);
+}
+.bottom.view-editor {
+  height: clamp(360px, 58dvh, 640px);
+}
+
+/* Retrato (iPad vertical / móvil): la batería arriba, la partitura más alta */
+@media (orientation: portrait) {
+  .bottom.view-score {
+    height: 34dvh;
+  }
+  .bottom.view-both {
+    height: 46dvh;
+  }
+  .bottom.view-editor {
+    height: 60dvh;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--app-panel-2);
+  border: 1px solid var(--app-border);
+  color: var(--app-muted);
+  white-space: nowrap;
+}
+
+.seg {
+  display: inline-flex;
+  background: var(--app-panel-2);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  padding: 3px;
+  gap: 2px;
+}
+.seg button {
+  border: 0;
+  background: transparent;
+  color: var(--app-muted);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 7px 12px;
+  min-height: 36px;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.seg button[aria-pressed="true"] {
+  background: var(--app-panel);
+  color: var(--app-text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.icon-btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.time-display {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 15px;
+  min-width: 118px;
+  text-align: center;
+}
+
+select.native {
+  appearance: none;
+  background: var(--app-panel-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E") no-repeat right 10px center;
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+  border-radius: 10px;
+  padding: 8px 28px 8px 10px;
+  font-size: 14px;
+  min-height: 40px;
+}
+
+input.native {
+  background: var(--app-panel-2);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 14px;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+
+/* ---------- Partitura ---------- */
+.score-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: var(--score-bg);
+}
+.score-scroll {
+  position: absolute;
+  inset: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.score-inner {
+  position: relative;
+  width: max-content;
+  min-width: 100%;
+  cursor: pointer;
+}
+.score-host {
+  min-height: 120px;
+}
+.score-cursor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  margin-left: -1px;
+  background: var(--app-accent);
+  border-radius: 2px;
+  box-shadow: 0 0 10px var(--app-accent);
+  pointer-events: none;
+  will-change: transform;
+  z-index: 3;
+}
+.score-hl {
+  position: absolute;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--app-accent) 26%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--app-accent) 70%, transparent);
+  pointer-events: none;
+  z-index: 2;
+}
+.score-loop {
+  position: absolute;
+  display: none;
+  background: rgba(79, 189, 250, 0.12);
+  border-left: 2px solid #4fbdfa;
+  border-right: 2px solid #4fbdfa;
+  pointer-events: none;
+  z-index: 1;
+}
+.score-badge {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--app-panel-2);
+  color: var(--app-muted);
+  z-index: 4;
+}
+.score-error {
+  color: #ff4d4f;
+}
+
+.highway {
+  display: block;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  touch-action: manipulation;
+}
+
+/* ---------- Superposiciones del escenario ---------- */
+.countin {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: min(28vw, 220px);
+  font-weight: 800;
+  color: var(--app-accent);
+  text-shadow: 0 6px 30px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+.stage-info {
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  max-width: 60%;
+}
+
+.panel-section {
+  display: grid;
+  gap: 12px;
+}
+.panel-section h3 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--app-muted);
+  margin: 6px 0 0;
+}
+
+.muted {
+  color: var(--app-muted);
+}
+
+.warn {
+  background: color-mix(in srgb, #ffb020 16%, transparent);
+  border: 1px solid color-mix(in srgb, #ffb020 50%, transparent);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.err {
+  background: color-mix(in srgb, #ff4d4f 14%, transparent);
+  border: 1px solid color-mix(in srgb, #ff4d4f 50%, transparent);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+table.data td,
+table.data th {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--app-border);
+  text-align: left;
+}
